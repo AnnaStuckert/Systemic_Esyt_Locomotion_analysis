@@ -1,0 +1,830 @@
+---
+title: "timepoint analysis"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(pacman)
+p_load(tidyverse, ggsignif,multcomp, broom, emmeans, DescTools)
+setwd("~/Documents/Systemic ESYT1 project locomotion, behavior, survival, anatomical data/Locomotion analysis cleaned/") 
+df<- read.table("speedProfile_final.csv", sep="\t", header=T)
+
+
+```
+Assign time point
+
+```{r}
+df2 <- df
+df2$time_point <- 0
+df2$time_point <- ifelse(grepl('p49_', df2$Name), 49, df2$time_point)
+df2$time_point <- ifelse(grepl('p56_', df2$Name), 56, df2$time_point)
+df2$time_point <- ifelse(grepl('p63_', df2$Name), 63, df2$time_point)
+df2$time_point <- ifelse(grepl('p70_', df2$Name), 70, df2$time_point)
+df2$time_point <- ifelse(grepl('p77_', df2$Name), 77, df2$time_point)
+df2$time_point <- ifelse(grepl('p84_', df2$Name), 84, df2$time_point)
+df2$time_point <- ifelse(grepl('p91_', df2$Name), 91, df2$time_point)
+df2$time_point <- ifelse(grepl('p98_', df2$Name), 98, df2$time_point)
+df2$time_point <- ifelse(grepl('p105_', df2$Name), 105, df2$time_point)
+df2$time_point <- ifelse(grepl('p112_', df2$Name), 112, df2$time_point)
+
+```
+
+
+
+Give each mouse own number
+```{r}
+
+df2$mouse_number <- 0
+
+#SOD1En1cre
+df2$mouse_number <- ifelse(grepl('736_', df$Name), '736', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('589_', df$Name), '589', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('603_', df$Name), '603', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('607_', df$Name), '607', df2$mouse_number)
+#En1re
+df2$mouse_number <- ifelse(grepl('561_', df$Name), '561', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('694_', df$Name), '694', df2$mouse_number) 
+df2$mouse_number <- ifelse(grepl('696_', df$Name), '696', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('698_', df$Name), '698', df2$mouse_number)
+#SOD1
+df2$mouse_number <- ifelse(grepl('730_', df$Name), '730', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('734_', df$Name), '734', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('738_', df$Name), '738', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('702_', df$Name), '702', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('625_', df$Name), '625', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('627_', df$Name), '627', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('615_', df$Name), '615', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('788_', df$Name), '788', df2$mouse_number)
+#WT
+df2$mouse_number <- ifelse(grepl('692_', df$Name), '692', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('700_', df$Name), '700', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('706_', df$Name), '706', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('708_', df$Name), '708', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('553_', df$Name), '553', df2$mouse_number)
+df2$mouse_number <- ifelse(grepl('555_', df$Name), '555', df2$mouse_number)
+```
+
+Assign genotypes
+```{r}
+df2$Genotype <- 0
+
+
+df2$Genotype <- ifelse(df2$mouse_number==702, 'SOD1', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==730, 'SOD1', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==734, 'SOD1', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==738, 'SOD1', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==625, 'SOD1', df2$Genotype) #SOD/WT injected with hEsyt1
+df2$Genotype <- ifelse(df2$mouse_number==627, 'SOD1', df2$Genotype) #SOD/WT injected with hEsyt1
+df2$Genotype <- ifelse(df2$mouse_number==615, 'SOD1', df2$Genotype) #SOD/En injected with GFP
+df2$Genotype <- ifelse(df2$mouse_number==788, 'SOD1', df2$Genotype) #SOD/En injected with GFP
+df2$Genotype <- ifelse(df2$mouse_number==700, 'WT', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==692, 'WT', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==706, 'WT', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==708, 'WT', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==553, 'WT', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==555, 'WT', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==694, 'En1cre', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==698, 'En1cre', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==696, 'En1cre', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==561, 'En1cre', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==736, 'SOD1En1cre', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==589, 'SOD1En1cre', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==603, 'SOD1En1cre', df2$Genotype)
+df2$Genotype <- ifelse(df2$mouse_number==607, 'SOD1En1cre', df2$Genotype)
+
+```
+
+
+Reduce dataset to the 6 SOD1 that were injected with GFP
+
+```{r}
+df2<-df2[!(df2$mouse_number=='625' | df2$mouse_number=='627'),] 
+```
+
+Generating mean cadence and stride for each observation
+```{r}
+#Calculating mean cadence
+df2$MeanCadence <- rowMeans(df2[,c("fLCad.","fRCad", "hLCad.", "hRCad.")])
+
+#Calculating mean stride
+df2$MeanStride <- rowMeans(df2[,c("hLStride","hRStride", "fLStride", "fRStride")])
+```
+
+
+Creating datasets based on timepoint
+
+```{r}
+p49 <- newdata <- subset(df2, time_point==49)
+p56 <- newdata <- subset(df2, time_point==56)
+p63 <- newdata <- subset(df2, time_point==63)
+p70 <- newdata <- subset(df2, time_point==70)
+p77 <- newdata <- subset(df2, time_point==77)
+p84 <- newdata <- subset(df2, time_point==84)
+p91 <- newdata <- subset(df2, time_point==91)
+p98 <- newdata <- subset(df2, time_point==98)
+p105 <- newdata <- subset(df2, time_point==105)
+p112 <- newdata <- subset(df2, time_point==112)
+```
+
+#Section used for creating excel files over genotypes and indivdiual mice, including mean stats for speed, acceleration, cadence and stride
+Subset p49 by Genotype
+```{r}
+SOD1_p49 <- newdata <- subset(p49, Genotype=='SOD1')
+SOD1En1cre_p49 <- newdata <- subset(p49, Genotype=='SOD1En1cre')
+En1cre_p49 <- newdata <- subset(p49, Genotype=='En1cre')
+WT_p49 <- newdata <- subset(p49, Genotype=='WT')
+```
+
+Subset p56 by Genotype
+```{r}
+SOD1_p56 <- newdata <- subset(p56, Genotype=='SOD1')
+SOD1En1cre_p56 <- newdata <- subset(p56, Genotype=='SOD1En1cre')
+En1cre_p56 <- newdata <- subset(p56, Genotype=='En1cre')
+WT_p56 <- newdata <- subset(p56, Genotype=='WT')
+```
+
+Subset p63 by Genotype
+```{r}
+SOD1_p63 <- newdata <- subset(p63, Genotype=='SOD1')
+SOD1En1cre_p63 <- newdata <- subset(p63, Genotype=='SOD1En1cre')
+En1cre_p63 <- newdata <- subset(p63, Genotype=='En1cre')
+WT_p63 <- newdata <- subset(p63, Genotype=='WT')
+```
+
+Subset p70 by Genotype
+```{r}
+SOD1_p70 <- newdata <- subset(p70, Genotype=='SOD1')
+SOD1En1cre_p70 <- newdata <- subset(p70, Genotype=='SOD1En1cre')
+En1cre_p70 <- newdata <- subset(p70, Genotype=='En1cre')
+WT_p70 <- newdata <- subset(p70, Genotype=='WT')
+```
+
+Subset p77 by Genotype
+```{r}
+SOD1_p77 <- newdata <- subset(p77, Genotype=='SOD1')
+SOD1En1cre_p77 <- newdata <- subset(p77, Genotype=='SOD1En1cre')
+En1cre_p77 <- newdata <- subset(p77, Genotype=='En1cre')
+WT_p77 <- newdata <- subset(p77, Genotype=='WT')
+```
+
+Subset p84 by Genotype
+```{r}
+SOD1_p84 <- newdata <- subset(p84, Genotype=='SOD1')
+SOD1En1cre_p84 <- newdata <- subset(p84, Genotype=='SOD1En1cre')
+En1cre_p84 <- newdata <- subset(p84, Genotype=='En1cre')
+WT_p84 <- newdata <- subset(p84, Genotype=='WT')
+```
+
+Subset p91 by Genotype
+```{r}
+SOD1_p91 <- newdata <- subset(p91, Genotype=='SOD1')
+SOD1En1cre_p91 <- newdata <- subset(p91, Genotype=='SOD1En1cre')
+En1cre_p91 <- newdata <- subset(p91, Genotype=='En1cre')
+WT_p91 <- newdata <- subset(p91, Genotype=='WT')
+```
+
+Subset p98 by Genotype
+```{r}
+SOD1_p98 <- newdata <- subset(p98, Genotype=='SOD1')
+SOD1En1cre_p98 <- newdata <- subset(p98, Genotype=='SOD1En1cre')
+En1cre_p98 <- newdata <- subset(p98, Genotype=='En1cre')
+WT_p98 <- newdata <- subset(p98, Genotype=='WT')
+```
+
+Subset p105 by Genotype
+```{r}
+SOD1_p105 <- newdata <- subset(p105, Genotype=='SOD1')
+SOD1En1cre_p105 <- newdata <- subset(p105, Genotype=='SOD1En1cre')
+En1cre_p105 <- newdata <- subset(p105, Genotype=='En1cre')
+WT_p105 <- newdata <- subset(p105, Genotype=='WT')
+```
+
+Subset p112 by Genotype
+```{r}
+SOD1_p112 <- newdata <- subset(p112, Genotype=='SOD1')
+SOD1En1cre_p112 <- newdata <- subset(p112, Genotype=='SOD1En1cre')
+En1cre_p112 <- newdata <- subset(p112, Genotype=='En1cre')
+WT_p112 <- newdata <- subset(p112, Genotype=='WT')
+```
+
+Mean for each mouse
+
+P49
+```{r}
+p49_means_mouse_by_Genotype <- p49 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+P56
+```{r}
+p56_means_mouse_by_Genotype <- p56 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+P63
+```{r}
+p63_means_mouse_by_Genotype <- p63 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+P70
+```{r}
+p70_means_mouse_by_Genotype <- p70 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+p77
+```{r}
+p77_means_mouse_by_Genotype <- p77 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+p84
+```{r}
+p84_means_mouse_by_Genotype <- p84 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+p91
+```{r}
+p91_means_mouse_by_Genotype <- p91 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+p98
+```{r}
+p98_means_mouse_by_Genotype <- p98 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+p105
+```{r}
+p105_means_mouse_by_Genotype <- p105 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+p112
+```{r}
+p112_means_mouse_by_Genotype <- p112 %>%
+	group_by(mouse_number, Genotype, time_point) %>%
+  summarise(PeakAcc. = mean(PeakAcc.), Avg.Speed = mean(Avg.Speed), MeanCadence = mean(MeanCadence), MeanStride = mean(MeanStride)) %>% 
+  arrange(Genotype)
+
+```
+
+Dataframe with mean per mouse all timepoints
+
+```{r}
+df_mean_per_mouse <- rbind(p49_means_mouse_by_Genotype, p56_means_mouse_by_Genotype, p63_means_mouse_by_Genotype, p70_means_mouse_by_Genotype, p77_means_mouse_by_Genotype, p84_means_mouse_by_Genotype, p91_means_mouse_by_Genotype, p98_means_mouse_by_Genotype, p105_means_mouse_by_Genotype, p112_means_mouse_by_Genotype)
+```
+
+
+#Plots
+
+Set color palette for plots
+
+For the plots, colors from the palette 'GrandBudapest1' from the 'wesanderson' package (Karthik Ram and Hadley Wickham (2018). wesanderson: A Wes Anderson Palette Generator. R package
+  version 0.3.6. https://CRAN.R-project.org/package=wesanderson) were used, but colors re-ordered so the darkest color was applied to the WT mice
+```{r}
+color_palette = c("#5B1A18","#FD6467",  "#F1BB7B")
+
+```
+
+#Genotype-wise analyses
+
+##Plots used in paper (onset and p112)
+
+Preparing the ggsignif function to use Dunnet's p-values
+```{r}
+
+stars <- function(p) {
+  case_when(
+    p <= 0.001 ~ "***",
+    p <= 0.01  ~ "**",
+    p <= 0.05  ~ "*",
+    TRUE       ~ "ns"
+  )
+}
+
+```
+
+
+one-way anova at p112
+
+```{r}
+
+#Ordering Genotype variables by manipulation so SOD1 becomes 'control' in Dunnet post-hoc tests
+p112$Genotype <- factor(p112$Genotype, levels = c("SOD1", "WT", "En1cre","SOD1En1cre"))
+
+#speed
+anova_speed_1way_onset <- aov(Avg.Speed ~ Genotype, data = p112)
+summary(anova_speed_1way_onset)
+
+DunnettTest(x=p112$Avg.Speed, g=p112$Genotype)
+
+#cadence
+anova_cadence_1way_onset <- aov(MeanCadence ~ Genotype, data = p112)
+summary(anova_cadence_1way_onset)
+
+DunnettTest(x=p112$MeanCadence, g=p112$Genotype)
+
+
+#stride
+anova_stride_1way_onset <- aov(MeanStride ~ Genotype, data = p112)
+summary(anova_stride_1way_onset)
+
+DunnettTest(x=p112$MeanStride, g=p112$Genotype)
+
+
+#acceleration
+anova_acceleration_1way_onset <- aov(PeakAcc. ~ Genotype, data = p112)
+summary(anova_acceleration_1way_onset)
+
+DunnettTest(x=p112$PeakAcc., g=p112$Genotype)
+
+```
+Plots
+
+```{r}
+
+#speed
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+p112$Genotype <- factor(p112$Genotype, levels = c("SOD1", "SOD1En1cre", "WT"))
+anova_speed_1way_onset <- aov(Avg.Speed ~ Genotype, data = p112)
+summary(anova_speed_1way_onset)
+
+Dunnet<- glht(anova_speed_1way_onset, mcp(Genotype = "Dunnet")) %>%tidy() %>% 
+  mutate(contrast = str_split(contrast, " - "),
+         stars    = stars(adj.p.value))
+
+#Re-ordering so the experimental groups appear in order of control level
+p112$Genotype <- factor(p112$Genotype, levels = c("WT", "En1cre","SOD1", "SOD1En1cre"))
+
+ggplot(data= p112, aes(x=Genotype, y=Avg.Speed)) +
+  geom_bar(stat = "summary",fun=mean, aes(color = Genotype,fill=Genotype), alpha = 0.01, size=1) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.4, position = "dodge")+
+  theme(panel.background = element_rect(fill = "white"), axis.line = element_line(color="black"))+ 
+  theme(text = element_text(family = "Arial"))+
+  scale_color_manual(values=color_palette)+
+  scale_fill_manual(values=color_palette)+
+      geom_jitter(data=p112_means_mouse_by_Genotype, position = position_jitter(width = .2), size=2.2)+
+  geom_jitter(data=p112, position = position_jitter(width = .2),alpha=0.3)+
+  ylim(0, 32) + ylab("Average speed (cm/s)") +
+    theme(axis.title.x=element_blank(),  text = element_text(size=15),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+    ggsignif::geom_signif(family = "Arial",
+    comparisons = Dunnet$contrast,
+    annotations = Dunnet$stars,
+    y_position = c(28, 22,25)
+  )
+
+#Acceleration
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+p112$Genotype <- factor(p112$Genotype, levels = c("SOD1", "SOD1En1cre", "WT"))
+anova_acceleration_1way_onset <- aov(PeakAcc. ~ Genotype, data = p112)
+
+Dunnet<- glht(anova_acceleration_1way_onset, mcp(Genotype = "Dunnet")) %>%tidy() %>% 
+  mutate(contrast = str_split(contrast, " - "),
+         stars    = stars(adj.p.value))
+
+#Re-ordering so the experimental groups appear in order of control level
+p112$Genotype <- factor(p112$Genotype, levels = c("WT", "En1cre","SOD1", "SOD1En1cre"))
+
+ggplot(data= p112, aes(x=Genotype, y=PeakAcc.)) +
+  geom_bar(stat = "summary",fun=mean, aes(color = Genotype,fill=Genotype), alpha = 0.01, size=1) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.4, position = "dodge")+
+  theme(panel.background = element_rect(fill = "white"), axis.line = element_line(color="black"))+ 
+  theme(text = element_text(family = "Arial"))+
+  scale_color_manual(values=color_palette)+
+  scale_fill_manual(values=color_palette)+
+          geom_jitter(data=p112_means_mouse_by_Genotype, position = position_jitter(width = .2), size=2.2)+
+  geom_jitter(data=p112, position = position_jitter(width = .2),alpha=0.3)+
+  ylim(0, 3.3)+ ylab("Peak acceleration (cm/s^2)") +
+    theme(axis.title.x=element_blank(),  text = element_text(size=15),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+          ggsignif::geom_signif(family = "Arial",
+    comparisons = Dunnet$contrast,
+    annotations = Dunnet$stars,
+    y_position = c(3.15,2.65, 2.9)
+  )
+
+#Cadence
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+p112$Genotype <- factor(p112$Genotype, levels = c("SOD1", "SOD1En1cre", "WT"))
+anova_cadence_1way_onset <- aov(MeanCadence ~ Genotype, data = p112)
+
+Dunnet<- glht(anova_cadence_1way_onset, mcp(Genotype = "Dunnet")) %>%tidy() %>% 
+  mutate(contrast = str_split(contrast, " - "),
+         stars    = stars(adj.p.value))
+
+#Re-ordering so the experimental groups appear in order of control level
+p112$Genotype <- factor(p112$Genotype, levels = c("WT", "En1cre","SOD1", "SOD1En1cre"))
+
+ggplot(data= p112, aes(x=Genotype, y=MeanCadence)) +
+  geom_bar(stat = "summary",fun=mean, aes(color = Genotype,fill=Genotype), alpha = 0.01, size=1) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.4, position = "dodge")+
+  theme(panel.background = element_rect(fill = "white"), axis.line = element_line(color="black"))+
+  theme(text = element_text(family = "Arial"))+
+  scale_color_manual(values=color_palette)+
+  scale_fill_manual(values=color_palette)+
+          geom_jitter(data=p112_means_mouse_by_Genotype, position = position_jitter(width = .2), size=2.2)+
+  geom_jitter(data=p112,position = position_jitter(width = .2),alpha=0.3)+
+  ylim(0, 6)+ ylab("Step frequency (Hz)") +
+    theme(axis.title.x=element_blank(),  text = element_text(size=15),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+        ggsignif::geom_signif(family = "Arial",
+    comparisons = Dunnet$contrast,
+    annotations = Dunnet$stars,
+    y_position = c(5.5,4.7,5.1)
+  )
+
+#Stride
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+p112$Genotype <- factor(p112$Genotype, levels = c("SOD1", "SOD1En1cre", "WT"))
+anova_stride_1way_onset <- aov(MeanStride ~ Genotype, data = p112)
+
+
+Dunnet<- glht(anova_stride_1way_onset, mcp(Genotype = "Dunnet")) %>%tidy() %>% 
+  mutate(contrast = str_split(contrast, " - "),
+         stars    = stars(adj.p.value))
+
+#Re-ordering so the experimental groups appear in order of control level
+p112$Genotype <- factor(p112$Genotype, levels = c("WT", "En1cre","SOD1", "SOD1En1cre"))
+
+ggplot(data= p112, aes(x=Genotype, y=MeanStride)) +
+  geom_bar(stat = "summary",fun=mean, aes(color = Genotype,fill=Genotype), alpha = 0.01, size=1) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.4, position = "dodge")+
+  theme(panel.background = element_rect(fill = "white"), axis.line = element_line(color="black"))+ 
+  theme(text = element_text(family = "Arial"))+
+  scale_color_manual(values=color_palette)+
+  scale_fill_manual(values=color_palette)+
+        geom_jitter(data=p112_means_mouse_by_Genotype, position = position_jitter(width = .2), size=2.2)+
+  geom_jitter(data=p112, position = position_jitter(width = .2),alpha=0.3)+
+  ylim(0,10) + ylab("Stride length (cm)") +
+    theme(axis.title.x=element_blank(),  text = element_text(size=15),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+      ggsignif::geom_signif(family = "Arial",
+    comparisons = Dunnet$contrast,
+    annotations = Dunnet$stars,
+    y_position = c(9,7.5,8.25)
+  )
+
+
+```
+
+Analysis of onset
+
+
+create subset of videos from onset of locomotor phenotype (when mouse could not keep up with treadmill belt speed of 20 cm/s). If mouse did not show onset at any point, onset is set to p112, except for WT and En1cre, they are set to p63. for mice where they have e.g had 2 trials at 20 cm and then one trial at 15 cm, the 'onset' has been counted as the next session where all trials were under 20 cm in speed.
+
+triplicates
+```{r}
+class(df2$mouse_number)
+
+onset_730 <-df2 %>% filter(mouse_number =='730' & time_point == 84)
+onset_734 <- df2%>% subset((mouse_number =='734' & time_point == 84))
+onset_736 <- df2%>% subset((mouse_number =='736' & time_point == 112))
+onset_738 <- df2%>% subset((mouse_number =='738' & time_point == 91))
+onset_788 <- df2%>% subset((mouse_number =='788' & time_point == 84))
+onset_702 <- df2%>% subset((mouse_number =='702' & time_point == 98))
+onset_615 <- df2%>% subset((mouse_number =='615' & time_point == 91))
+onset_589 <- df2%>% subset((mouse_number =='589' & time_point == 112))
+onset_607 <- df2%>% subset((mouse_number =='607' & time_point == 112))
+onset_603 <- df2%>% subset((mouse_number =='603' & time_point == 112))
+
+onset_wt <- df2%>% subset((Genotype == 'WT' & time_point == 63))
+#onset_En1cre <- df2%>% subset((Genotype == 'En1cre' & time_point == 63))
+
+
+#did not include En1cre as we dod not collect data from them until p112, so do not think they should be included for analysis
+onset_all <- rbind(onset_730, onset_734, onset_736, onset_738, onset_788, onset_702, onset_615, onset_589, onset_607, onset_603, onset_wt)
+```
+
+Means
+
+
+for mean
+```{r}
+
+onset_730 <-df_mean_per_mouse %>% filter(mouse_number =='730' & time_point == 84)
+onset_734 <- df_mean_per_mouse%>% subset((mouse_number =='734' & time_point == 84))
+onset_736 <- df_mean_per_mouse%>% subset((mouse_number =='736' & time_point == 112))
+onset_738 <- df_mean_per_mouse%>% subset((mouse_number =='738' & time_point == 91))
+onset_788 <- df_mean_per_mouse%>% subset((mouse_number =='788' & time_point == 84))
+onset_702 <- df_mean_per_mouse%>% subset((mouse_number =='702' & time_point == 98))
+onset_615 <- df_mean_per_mouse%>% subset((mouse_number =='615' & time_point == 91))
+onset_589 <- df_mean_per_mouse%>% subset((mouse_number =='589' & time_point == 112))
+onset_607 <- df_mean_per_mouse%>% subset((mouse_number =='607' & time_point == 112))
+onset_603 <- df_mean_per_mouse%>% subset((mouse_number =='603' & time_point == 112))
+
+onset_wt <- df_mean_per_mouse%>% subset((Genotype == 'WT' & time_point == 63))
+#onset_En1cre <- df_mean_per_mouse%>% subset((Genotype == 'En1cre' & time_point == 63))
+
+
+#did not include En1cre as we dod not collect data from them until p112, so do not think they should be included for analysis
+onset_mean <- rbind(onset_730, onset_734, onset_736, onset_738, onset_788, onset_702, onset_615, onset_589, onset_607, onset_603, onset_wt)
+
+```
+
+
+
+onset only
+
+```{r}
+
+#speed
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("SOD1", "WT", "En1cre", "SOD1En1cre"))
+anova_speed_1way_onset <- aov(Avg.Speed ~ Genotype, data = onset_all)
+summary(anova_speed_1way_onset)
+
+Dunnet<- glht(anova_speed_1way_onset, mcp(Genotype = "Dunnet")) %>%tidy() %>% 
+  mutate(contrast = str_split(contrast, " - "),
+         stars    = stars(adj.p.value))
+
+#Re-ordering so the experimental groups appear in order of control level
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("WT", "En1cre","SOD1", "SOD1En1cre"))
+
+ggplot(data= onset_all, aes(x=Genotype, y=Avg.Speed)) +
+  geom_bar(stat = "summary",fun=mean, aes(color = Genotype,fill=Genotype), alpha = 0.01, size=1) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.4, position = "dodge")+
+  theme(panel.background = element_rect(fill = "white"), axis.line = element_line(color="black"))+ 
+  scale_color_manual(values=color_palette)+
+  scale_fill_manual(values=color_palette)+
+      geom_jitter(data=onset_mean, position = position_jitter(width = .2), size=2.2)+
+  geom_jitter(position = position_jitter(width = .2),alpha=0.3)+
+  ylim(0, 32) + ylab("Average speed cm/s") +
+    theme(axis.title.x=element_blank(),  text = element_text(size=15),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+    ggsignif::geom_signif(
+    comparisons = Dunnet$contrast,
+    annotations = Dunnet$stars,
+    y_position = c(23,26,29)
+  )
+
+#Acceleration
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("SOD1", "WT", "En1cre", "SOD1En1cre"))
+anova_acceleration_1way_onset <- aov(PeakAcc. ~ Genotype, data = onset_all)
+
+Dunnet<- glht(anova_acceleration_1way_onset, mcp(Genotype = "Dunnet")) %>%tidy() %>% 
+  mutate(contrast = str_split(contrast, " - "),
+         stars    = stars(adj.p.value))
+
+#Re-ordering so the experimental groups appear in order of control level
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("WT", "En1cre","SOD1", "SOD1En1cre"))
+
+ggplot(data= onset_all, aes(x=Genotype, y=PeakAcc.)) +
+  geom_bar(stat = "summary",fun=mean, aes(color = Genotype,fill=Genotype), alpha = 0.01, size=1) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.4, position = "dodge")+
+  theme(panel.background = element_rect(fill = "white"), axis.line = element_line(color="black"))+ 
+  scale_color_manual(values=color_palette)+
+  scale_fill_manual(values=color_palette)+
+          geom_jitter(data=onset_mean, position = position_jitter(width = .2), size=2.2)+
+  geom_jitter(position = position_jitter(width = .2),alpha=0.3)+
+  ylim(0, 3.3)+ ylab("Peak acceleration (cm/s^2)") +
+    theme(axis.title.x=element_blank(),  text = element_text(size=15),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+          ggsignif::geom_signif(
+    comparisons = Dunnet$contrast,
+    annotations = Dunnet$stars,
+    y_position = c(2.65, 2.9,3.15)
+  )
+
+#Cadence
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("SOD1", "WT", "En1cre", "SOD1En1cre"))
+anova_cadence_1way_onset <- aov(MeanCadence ~ Genotype, data = onset_all)
+
+Dunnet<- glht(anova_cadence_1way_onset, mcp(Genotype = "Dunnet")) %>%tidy() %>% 
+  mutate(contrast = str_split(contrast, " - "),
+         stars    = stars(adj.p.value))
+
+#Re-ordering so the experimental groups appear in order of control level
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("WT", "En1cre","SOD1", "SOD1En1cre"))
+
+ggplot(data= onset_all, aes(x=Genotype, y=MeanCadence)) +
+  geom_bar(stat = "summary",fun=mean, aes(color = Genotype,fill=Genotype), alpha = 0.01, size=1) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.4, position = "dodge")+
+  theme(panel.background = element_rect(fill = "white"), axis.line = element_line(color="black"))+ 
+  scale_color_manual(values=color_palette)+
+  scale_fill_manual(values=color_palette)+
+          geom_jitter(data=onset_mean, position = position_jitter(width = .2), size=2.2)+
+  geom_jitter(position = position_jitter(width = .2),alpha=0.3)+
+  ylim(0, 6)+ ylab("Step frequency (Hz)") +
+    theme(axis.title.x=element_blank(),  text = element_text(size=15),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+        ggsignif::geom_signif(
+    comparisons = Dunnet$contrast,
+    annotations = Dunnet$stars,
+    y_position = c(4.7,5.1,5.5)
+  )
+
+#Stride
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("SOD1", "WT", "En1cre", "SOD1En1cre"))
+anova_stride_1way_onset <- aov(MeanStride ~ Genotype, data = onset_all)
+
+
+Dunnet<- glht(anova_stride_1way_onset, mcp(Genotype = "Dunnet")) %>%tidy() %>% 
+  mutate(contrast = str_split(contrast, " - "),
+         stars    = stars(adj.p.value))
+
+#Re-ordering so the experimental groups appear in order of control level
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("WT", "En1cre","SOD1", "SOD1En1cre"))
+
+ggplot(data= onset_all, aes(x=Genotype, y=MeanStride)) +
+  geom_bar(stat = "summary",fun=mean, aes(color = Genotype,fill=Genotype), alpha = 0.01, size=1) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.4, position = "dodge")+
+  theme(panel.background = element_rect(fill = "white"), axis.line = element_line(color="black"))+ 
+  scale_color_manual(values=color_palette)+
+  scale_fill_manual(values=color_palette)+
+        geom_jitter(data=onset_mean, position = position_jitter(width = .2), size=2.2)+
+  geom_jitter(position = position_jitter(width = .2),alpha=0.3)+
+  ylim(0,9) + ylab("Stride length (cm)") +
+    theme(axis.title.x=element_blank(),  text = element_text(size=15),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())+
+      ggsignif::geom_signif(
+    comparisons = Dunnet$contrast,
+    annotations = Dunnet$stars,
+    y_position = c(6,7,8)
+  )
+
+
+```
+
+
+one-way anova at onset
+
+```{r}
+
+#Ordering Genotype variables by manipulation so SOD1 becomes 'control' in Dunnet post-hoc tests
+onset_all$Genotype <- factor(onset_all$Genotype, levels = c("SOD1", "WT", "En1cre", "SOD1En1cre"))
+
+
+#speed
+anova_speed_1way_onset_all <- aov(Avg.Speed ~ Genotype, data = onset_all)
+summary(anova_speed_1way_onset_all)
+DunnettTest(x=onset_all$Avg.Speed, g=onset_all$Genotype)
+
+#cadence
+anova_cadence_1way_onset_all <- aov(MeanCadence ~ Genotype, data = onset_all)
+summary(anova_cadence_1way_onset_all)
+DunnettTest(x=onset_all$MeanCadence, g=onset_all$Genotype)
+
+#stride
+anova_stride_1way_onset_all <- aov(MeanStride ~ Genotype, data = onset_all)
+summary(anova_stride_1way_onset_all)
+DunnettTest(x=onset_all$MeanStride, g=onset_all$Genotype)
+
+#acceleration
+anova_acceleration_1way_onset_all <- aov(PeakAcc. ~ Genotype, data = onset_all)
+summary(anova_acceleration_1way_onset_all)
+DunnettTest(x=onset_all$PeakAcc., g=onset_all$Genotype) #Dunnet's test
+
+```
+
+LONGITUDINAL
+
+
+##Statistics
+
+Removing En1
+```{r}
+df2<-df2[!(df2$Genotype=='En1cre'),] 
+```
+
+
+For the plots, colors from the palette 'GrandBudapest1' from the 'wesanderson' package (Karthik Ram and Hadley Wickham (2018). wesanderson: A Wes Anderson Palette Generator. R package
+  version 0.3.6. https://CRAN.R-project.org/package=wesanderson) were used, but colors re-ordered so the darkest color was applied to the wt mice
+
+Longitudinal plot Speed
+```{r}
+df2$time_point <-  as.numeric(df2$time_point)
+
+ggplot(df2, aes(x=time_point, y= Avg.Speed, color=Genotype)) +
+  geom_point(stat = "summary",fun.data=mean_se) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.5) +
+    scale_color_manual(values = color_palette)+ 
+  geom_line(stat = "summary", fun.data=mean_se)+
+    theme(panel.background = element_rect(fill = "white"), text = element_text(size=15), axis.line = element_line(color="black"), legend.key = element_rect(colour = "transparent", fill = "white")) +
+  xlab("Postnatal day (timepoint)") + ylab("Average speed (cm/s)")
+
+```
+
+Peak acceleration
+```{r}
+ggplot(df2, aes(x=time_point, y= PeakAcc., color=Genotype)) +
+  geom_point(stat = "summary",fun.data=mean_se) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.5) +
+    scale_color_manual(values = color_palette)+ 
+  geom_line(stat = "summary",fun.data=mean_se)+
+    theme(panel.background = element_rect(fill = "white"), text = element_text(size=15), axis.line = element_line(color="black"), legend.key = element_rect(colour = "transparent", fill = "white")) +
+  xlab("Postnatal day (timepoint)") + ylab("Peak acceleration (cm/s^2)")
+
+```
+
+MeanCadence
+```{r}
+ggplot(df2, aes(x=time_point, y= MeanCadence, color=Genotype)) +
+  geom_point(stat = "summary", fun.data=mean_se) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.5) +
+    scale_color_manual(values = color_palette)+ 
+  geom_line(stat = "summary", fun.data=mean_se)+
+    theme(panel.background = element_rect(fill = "white"), text = element_text(size=15), axis.line = element_line(color="black"), legend.key = element_rect(colour = "transparent", fill = "white")) +
+  xlab("Postnatal day (timepoint)") + ylab("Step frequency (Hz)")
+
+```
+
+MeanStride
+```{r}
+ggplot(df2, aes(x=time_point, y= MeanStride, color=Genotype)) +
+  geom_point(stat = "summary",fun.data=mean_se) +
+  geom_errorbar(stat="summary", fun.data=mean_se, width = 0.5) +
+    scale_color_manual(values = color_palette)+ 
+  geom_line(stat = "summary",fun.data=mean_se)+
+    theme(panel.background = element_rect(fill = "white"), text = element_text(size=15), axis.line = element_line(color="black"), legend.key = element_rect(colour = "transparent", fill = "white")) +
+  xlab("Postnatal day (timepoint)") + ylab("Stride length (cm)")
+
+```
+
+
+Two-way anova across timepoints
+```{r}
+#Ordering Genotype variables by manipulation so SOD1 becomes comparison group
+df2$Genotype <- factor(df2$Genotype, levels = c("SOD1", "WT", "En1cre", "SOD1En1cre"))
+
+df2$time_point <- as.factor(df2$time_point) #independent variables have to be recoded as factors to allow 'stratification' by timepoint for two-way anova
+
+### Speed
+anova_speed_2way <- aov(Avg.Speed ~ Genotype*time_point, data = df2)
+summary(anova_speed_2way)
+
+emmeans(anova_speed_2way,specs = trt.vs.ctrl~ Genotype|time_point)
+
+
+### Cadence
+anova_cadence_2way <- aov(MeanCadence ~ Genotype*time_point, data = df2)
+summary(anova_cadence_2way)
+
+emmeans(anova_cadence_2way,specs = trt.vs.ctrl~ Genotype|time_point)
+
+### Stride
+anova_stride_2way <- aov(MeanStride ~ Genotype*time_point, data = df2)
+summary(anova_stride_2way)
+
+emmeans(anova_stride_2way,specs = trt.vs.ctrl~ Genotype|time_point)
+
+
+###Acceleration
+
+anova_acceleration_2way <- aov(PeakAcc. ~ Genotype*time_point, data = df2)
+summary(anova_acceleration_2way)
+
+emmeans(anova_acceleration_2way,specs = trt.vs.ctrl~ Genotype|time_point)
+
+```
+
